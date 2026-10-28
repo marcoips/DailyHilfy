@@ -1,5 +1,6 @@
 ﻿using DailyHilfy.Models;
 using Microsoft.AspNetCore.Mvc;
+using DailyHilfy.DTOs;
 
 namespace DailyHilfy.Controllers;
 
@@ -17,9 +18,22 @@ public class DailyEntryController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<DailyEntry> Create(DailyEntry entry)
+    public ActionResult<DailyEntry> Create(CreateDailyEntryDto dto)
     {
-        entry.Id = _nextId++;
+        var entry = new DailyEntry
+        {
+            Id = _nextId++,
+            Date = dto.Date,
+            WorkMinutes = dto.WorkMinutes,
+            WorkDescription = dto.WorkDescription,
+            ExerciseMinutes = dto.ExerciseMinutes,
+            ExerciseDescription = dto.ExerciseDescription,
+            FinanceAmount = dto.FinanceAmount,
+            FinanceType = dto.FinanceType,
+            FinanceDescription = dto.FinanceDescription,
+            Notes = dto.Notes
+        };
+
         Entries.Add(entry);
 
         return CreatedAtAction(
