@@ -1,5 +1,8 @@
 ﻿using DailyHilfy.Models;
 using Microsoft.AspNetCore.Mvc;
+using DailyHilfy.DTOs;
+using DailyHilfy.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace DailyHilfy.Controllers;
 
@@ -7,37 +10,54 @@ namespace DailyHilfy.Controllers;
 [Route("api/[controller]")]
 public class DailyEntryController : ControllerBase
 {
-    private static readonly List<DailyEntry> Entries = new();
-    private static int _nextId = 1;
+    private readonly DailyHilfyContext _context;
+
+    public DailyEntryController(DailyHilfyContext context)
+    {
+        _context = context;
+    }
 
     [HttpGet]
-    public ActionResult<IEnumerable<DailyEntry>> GetAll()
+    public async Task<ActionResult<IEnumerable<DailyEntry>>> GetAll()
     {
-        return Ok(Entries);
+        var entries = await _context.DailyEntries.AsNoTracking().ToListAsync();
+
+        return Ok(entries);
     }
 
     [HttpPost]
-    public ActionResult<DailyEntry> Create(DailyEntry entry)
+    public async Task<ActionResult<DailyEntry>> Create(CreateDailyEntryDto dto)
     {
-        entry.Id = _nextId++;
-        Entries.Add(entry);
+        var entry = new DailyEntry
+        {
+            Date = dto.Date,
+            WorkMinutes = dto.WorkMinutes,
+            WorkDescription = dto.WorkDescription,
+            ExerciseMinutes = dto.ExerciseMinutes,
+            ExerciseDescription = dto.ExerciseDescription,
+            FinanceAmount = dto.FinanceAmount,
+            FinanceType = dto.FinanceType,
+            FinanceDescription = dto.FinanceDescription,
+            Notes = dto.Notes
+        };
 
-        return CreatedAtAction(
-            nameof(GetById),
+        _context.DailyEntries.Add(entry);
+
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetById),
             new { id = entry.Id },
             entry);
     }
 
     [HttpGet("{id:int}")]
-    public ActionResult<DailyEntry> GetById(int id)
+    public async Task<ActionResult<DailyEntry>> GetById(int id)
     {
-        var entry = Entries.FirstOrDefault(e => e.Id == id);
-
-        if (entry is null)
+        var entry = await _context.DailyEntries.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+        if (entry == null)
         {
             return NotFound();
         }
-
         return Ok(entry);
     }
 }
