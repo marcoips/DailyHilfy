@@ -1,3 +1,5 @@
+using DailyHilfy.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +9,9 @@ builder.Services.AddControllers();
 // Configure Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//Database configuration
+builder.Services.AddDbContext<DailyHilfyContext>(options => options.UseSqlite("Data Source = DailyHilfy.db"));
 
 var app = builder.Build();
 

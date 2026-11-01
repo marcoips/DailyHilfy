@@ -1,6 +1,8 @@
 ﻿using DailyHilfy.Models;
 using Microsoft.AspNetCore.Mvc;
 using DailyHilfy.DTOs;
+using DailyHilfy.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace DailyHilfy.Controllers;
 
@@ -8,21 +10,26 @@ namespace DailyHilfy.Controllers;
 [Route("api/[controller]")]
 public class DailyEntryController : ControllerBase
 {
-    private static readonly List<DailyEntry> Entries = new();
-    private static int _nextId = 1;
+    private readonly DailyHilfyContext _context;
+
+    public DailyEntryController(DailyHilfyContext context)
+    {
+        _context = context;
+    }
 
     [HttpGet]
-    public ActionResult<IEnumerable<DailyEntry>> GetAll()
+    public async Task<ActionResult<IEnumerable<DailyEntry>>> GetAll()
     {
-        return Ok(Entries);
+        var entries = await _context.DailyEntries.AsNoTracking().ToListAsync();
+
+        return Ok(entries);
     }
 
     [HttpPost]
-    public ActionResult<DailyEntry> Create(CreateDailyEntryDto dto)
+    public async Task<ActionResult<DailyEntry>> Create(CreateDailyEntryDto dto)
     {
         var entry = new DailyEntry
         {
-            Id = _nextId++,
             Date = dto.Date,
             WorkMinutes = dto.WorkMinutes,
             WorkDescription = dto.WorkDescription,
@@ -34,24 +41,23 @@ public class DailyEntryController : ControllerBase
             Notes = dto.Notes
         };
 
-        Entries.Add(entry);
+        _context.DailyEntries.Add(entry);
 
-        return CreatedAtAction(
-            nameof(GetById),
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetById),
             new { id = entry.Id },
             entry);
     }
 
     [HttpGet("{id:int}")]
-    public ActionResult<DailyEntry> GetById(int id)
+    public async Task<ActionResult<DailyEntry>> GetById(int id)
     {
-        var entry = Entries.FirstOrDefault(e => e.Id == id);
-
-        if (entry is null)
+        var entry = await _context.DailyEntries.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+        if (entry == null)
         {
             return NotFound();
         }
-
         return Ok(entry);
     }
 }
