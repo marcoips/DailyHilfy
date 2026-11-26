@@ -60,4 +60,31 @@ public class DailyEntryController : ControllerBase
         }
         return Ok(entry);
     }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(
+    int id,
+    UpdateDailyEntryDto dto)
+    {
+        var entry = await _context.DailyEntries.FindAsync(id);
+
+        if (entry is null)
+        {
+            return NotFound();
+        }
+
+        entry.Date = dto.Date;
+        entry.WorkMinutes = dto.WorkMinutes;
+        entry.WorkDescription = dto.WorkDescription;
+        entry.ExerciseMinutes = dto.ExerciseMinutes;
+        entry.ExerciseDescription = dto.ExerciseDescription;
+        entry.FinanceAmount = dto.FinanceAmount;
+        entry.FinanceType = dto.FinanceType;
+        entry.FinanceDescription = dto.FinanceDescription;
+        entry.Notes = dto.Notes;
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
