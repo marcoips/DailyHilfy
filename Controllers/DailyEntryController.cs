@@ -87,4 +87,23 @@ public class DailyEntryController : ControllerBase
 
         return NoContent();
     }
+
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var entry = await _context.DailyEntries.FindAsync(id);
+
+        if (entry is null)
+        {
+            return NotFound();
+        }
+
+        _context.DailyEntries.Remove(entry);
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
 }
